@@ -16,7 +16,7 @@ Compare results.
 * Mid-square method
 * Multiplicative congruent method
 
-**Testing :**
+**Tests :**
 * Uniformity testing
 * Testing independence
 ---
