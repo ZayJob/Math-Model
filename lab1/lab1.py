@@ -1,6 +1,6 @@
 """LAB 1."""
 
-
+from math import sqrt
 from random import randint, seed
 from abc import ABC, abstractmethod
 
@@ -104,12 +104,7 @@ class MultiplicativeCongruentMethod(BaseMethod):
 class BaseTest(ABC):
     """Absatract base class for test class"""
     @abstractmethod
-    def solve(self, result: list) -> None:
-        """"""
-        pass
-
-    @abstractmethod
-    def build_plot(self, method) -> None:
+    def solve(self, z: list, method) -> None:
         """"""
         pass
 
@@ -126,21 +121,24 @@ class UniformityTest(BaseTest):
         self.temp_dict: dict = {}
         self.array: list = []
 
-    def solve(self, result: list) -> None:
+    def build_plot(self, method) -> None:
+        """"""
+        plt.bar(self.array, list(self.temp_dict.values()), width=0.1, align='edge')
+        plt.title(method.__class__.__name__)
+        plt.show()
+
+    def solve(self, z: list, method) -> None:
         """"""
         self.array = [i * 1/self.k for i in range(0,11)]
         for index, segment in enumerate(self.array):
             if index + 1 == len(self.array):
                 break
             segment = tuple([segment, self.array[index + 1]])
-            self.temp_dict[segment] = len([i for i in result if i >= self.array[index] and i < self.array[index + 1]]) / len(result)
+            self.temp_dict[segment] = len([i for i in z if i >= self.array[index] and i < self.array[index + 1]]) / len(z)
+
         del self.array[-1]
-        
-    def build_plot(self, method) -> None:
-        """"""
-        plt.bar(self.array, list(self.temp_dict.values()), width=0.1, align='edge')
-        plt.title(method.__class__.__name__)
-        plt.show()
+
+        self.build_plot(method)
 
     def __str__(self) -> str:
         """"""
@@ -149,16 +147,37 @@ class UniformityTest(BaseTest):
 
 class IndependenceTest(BaseTest):
     """Independence test class"""
-    def __init__(self, k: int):
+    def __init__(self, k: int, s: int):
         self.k: int = k
+        self.s: int = s
 
-    def solve(self, result: list) -> None:
+    def shift(self, z: list) -> list:
         """"""
-        pass
+        for i in range(self.s):
+            z.insert(0, z.pop())
+        return z
 
-    def build_plot(self, method) -> None:
+    def M(self, z: list) -> float:
         """"""
-        pass
+        return 1/len(z) * sum(z)
+
+    def D(self, z: list) -> float:
+        """"""
+        #return 1/len(z) * sum([i ** 2 - self.M(z) ** 2 for i in z])
+        return 1/len(z) * sum(map(lambda x: x ** 2, z)) - self.M(z) ** 2
+
+    def M_x_y(self, z: list, z_shift: list) -> float:
+        """"""
+        return sum([i * j for i, j in zip(z,z_shift)]) * 1/len(z)
+
+    def corrcoef(self, z: list, z_shift: list) -> float:
+        """"""
+        return (self.M_x_y(z, z_shift) - self.M(z) * self.M(z_shift)) / sqrt(self.D(z) * self.D(z_shift))
+
+    def solve(self, z: list, method) -> None:
+        """"""
+        z_shift = self.shift(z.copy())
+        print(self.corrcoef(z, z_shift))
 
     def __str__(self) -> str:
         """"""
@@ -214,19 +233,18 @@ class LAB:
     def run(self) -> None:
         """Function for run all methods"""
         for method in self.methods:
-            result = method.start()
-            print(result)
+            z = method.start()
+            print(z)
             for test in self.tests:
-                test.solve(result)
-                test.build_plot(method)
+                test.solve(z, method)
 
 
 def main() -> None:
     """Main"""
-    midsquare_method = MidSquareMethod(100)
+    midsquare_method = MidSquareMethod(10)
     multiplicative_congruent_method = MultiplicativeCongruentMethod(10, 16807, 2 ** 31 - 1)
 
-    independence_test = IndependenceTest(10)
+    independence_test = IndependenceTest(10, 5)
     uniformity_test= UniformityTest(10)
 
     lab = LAB(midsquare_method, multiplicative_congruent_method)
