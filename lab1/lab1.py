@@ -19,7 +19,7 @@ class BaseMethod(ABC):
         pass
 
     @abstractmethod
-    def start(self) -> None:
+    def start(self) -> list:
         """"""
         pass
 
@@ -87,7 +87,7 @@ class MultiplicativeCongruentMethod(BaseMethod):
             i += 1
 
 
-    def start(self) -> None:
+    def start(self) -> list:
         """"""
         seed(randint(100,200))
 
