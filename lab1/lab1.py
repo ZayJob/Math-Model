@@ -1,5 +1,6 @@
 """LAB 1."""
 
+
 from random import randint, seed
 from abc import ABC, abstractmethod
 
@@ -37,18 +38,18 @@ class MidSquareMethod(BaseMethod):
 
     def solve(self) -> None:
         """"""
-        rand_int = randint(1000,9999)
+        rand_int = randint(10000000,99999999)
 
         i = 0
         while i < self.n:
             rand_int = rand_int ** 2
-            if len(str(rand_int)) < 8:
-                rand_int = "0" * (8 - len(str(rand_int))) + str(rand_int)
+            if len(str(rand_int)) < 16:
+                rand_int = "0" * (16 - len(str(rand_int))) + str(rand_int)
             else:
                 rand_int = str(rand_int)
 
-            self.result.append(int(rand_int[1:5]))
-            rand_int = int(rand_int[1:5])
+            self.result.append(int(rand_int[3:11]) / 100000000)
+            rand_int = int(rand_int[3:11])
 
             i += 1
 
@@ -103,7 +104,12 @@ class MultiplicativeCongruentMethod(BaseMethod):
 class BaseTest(ABC):
     """Absatract base class for test class"""
     @abstractmethod
-    def build_plot(self) -> None:
+    def solve(self, result: list) -> None:
+        """"""
+        pass
+
+    @abstractmethod
+    def build_plot(self, method) -> None:
         """"""
         pass
 
@@ -115,12 +121,26 @@ class BaseTest(ABC):
 
 class UniformityTest(BaseTest):
     """Uniformity test class"""
-    def __init__(self):
-        pass
+    def __init__(self, k: int):
+        self.k: int = k
+        self.temp_dict: dict = {}
+        self.array: list = []
 
-    def build_plot(self, result: list) -> None:
+    def solve(self, result: list) -> None:
         """"""
-        pass
+        self.array = [i * 1/self.k for i in range(0,11)]
+        for index, segment in enumerate(self.array):
+            if index + 1 == len(self.array):
+                break
+            segment = tuple([segment, self.array[index + 1]])
+            self.temp_dict[segment] = len([i for i in result if i >= self.array[index] and i < self.array[index + 1]]) / len(result)
+        del self.array[-1]
+        
+    def build_plot(self, method) -> None:
+        """"""
+        plt.bar(self.array, list(self.temp_dict.values()), width=0.1, align='edge')
+        plt.title(method.__class__.__name__)
+        plt.show()
 
     def __str__(self) -> str:
         """"""
@@ -129,12 +149,16 @@ class UniformityTest(BaseTest):
 
 class IndependenceTest(BaseTest):
     """Independence test class"""
-    def __init__(self):
+    def __init__(self, k: int):
+        self.k: int = k
+
+    def solve(self, result: list) -> None:
+        """"""
         pass
 
-    def build_plot(self, result: list) -> None:
+    def build_plot(self, method) -> None:
         """"""
-        print("IndependenceTest")
+        pass
 
     def __str__(self) -> str:
         """"""
@@ -176,7 +200,6 @@ class LAB:
         methods = methods[0]
         self._checking_inheritance(methods, BaseMethod)
 
-
     @property
     def tests(self) -> list:
         """"""
@@ -188,43 +211,25 @@ class LAB:
         tests = tests[0]
         self._checking_inheritance(tests, BaseTest)
 
-    
     def run(self) -> None:
         """Function for run all methods"""
         for method in self.methods:
             result = method.start()
+            print(result)
             for test in self.tests:
-                test.build_plot(result)
-
-# TEST
-class TestRaise():
-    """TestRaise class"""
-    def __init__(self):
-        pass
-
-    def solve(self) -> None:
-        """"""
-        pass
-
-    def start(self) -> None:
-        """"""
-        print("MultiplicativeCongruentMethod")
-
-    def __str__(self) -> str:
-        """"""
-        return self.__class__.__name__
+                test.solve(result)
+                test.build_plot(method)
 
 
 def main() -> None:
     """Main"""
-    midsquare_method = MidSquareMethod(5)
-    multiplicative_congruent_method = MultiplicativeCongruentMethod(20, 7, 13)
-    test_raise = TestRaise()
+    midsquare_method = MidSquareMethod(100)
+    multiplicative_congruent_method = MultiplicativeCongruentMethod(10, 16807, 2 ** 31 - 1)
 
-    independence_test = IndependenceTest()
-    uniformity_test= UniformityTest()
+    independence_test = IndependenceTest(10)
+    uniformity_test= UniformityTest(10)
 
-    lab = LAB(midsquare_method, multiplicative_congruent_method, test_raise)
+    lab = LAB(midsquare_method, multiplicative_congruent_method)
     lab.add_tests(independence_test, uniformity_test)
     lab.run()
 
