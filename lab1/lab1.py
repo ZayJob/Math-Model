@@ -36,24 +36,30 @@ class BaseMethod(ABC):
 
 class MidSquareMethod(BaseMethod):
     """Mid-square method class"""
-    def __init__(self, n: int):
+    def __init__(self, n: int, capacity: int):
         self.n: int = n
         self.result: list = []
+        self.capacity: int = capacity
+        self.capacity_randint = capacity * 2
 
     def solve(self) -> None:
         """Solve mid-square method."""
-        rand_int = randint(1000000000000000,9999999999999999)
+        rand_int = randint(10 ** (self.capacity - 2), 10 ** (self.capacity - 1) - 1)
 
         i = 0
         while i < self.n:
             rand_int = rand_int ** 2
-            if len(str(rand_int)) < 32:
-                rand_int = "0" * (32 - len(str(rand_int))) + str(rand_int)
+            if len(str(rand_int)) < self.capacity_randint:
+                rand_int = "0" * (self.capacity_randint - len(str(rand_int))) + str(rand_int)
             else:
                 rand_int = str(rand_int)
 
-            self.result.append(int(rand_int[7:23]) / 10000000000000000)
-            rand_int = int(rand_int[7:23])
+            left_border = int(self.capacity / 2)
+            right_border = self.capacity + left_border
+
+            new_rand_int = int(rand_int[left_border:right_border])
+            self.result.append(new_rand_int / 10 ** self.capacity)
+            rand_int = new_rand_int
 
             i += 1
 
@@ -156,7 +162,7 @@ class UniformityTest(BaseTest, FuncMixin):
 
     def test(self, z: list, method) -> None:
         """Test method."""
-        self.array = [i * 1/self.k for i in range(0,11)]
+        self.array = [i * 1 / self.k for i in range(0, 11)]
         for index, segment in enumerate(self.array):
             if index + 1 == len(self.array):
                 break
@@ -272,8 +278,8 @@ class LAB:
 
 def main() -> None:
     """Main"""
-    midsquare = MidSquareMethod(1000000)
-    multiplicative_congruent = MultiplicativeCongruentMethod(1000000, 16807, 2 ** 31 - 1)
+    midsquare = MidSquareMethod(10, 16)
+    multiplicative_congruent = MultiplicativeCongruentMethod(10, 16807, 2 ** 31 - 1)
 
     independence = IndependenceTest(10, 5)
     uniformity = UniformityTest(10)
