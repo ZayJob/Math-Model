@@ -1,5 +1,8 @@
 """LAB 1."""
 
+
+import numpy as np
+
 from math import sqrt
 from random import randint, seed
 from abc import ABC, abstractmethod
@@ -8,6 +11,7 @@ from matplotlib import pyplot as plt
 
 
 class NotInheritedFromBaseClass(Exception):
+    """Ecxeption class"""
     def __init__(self, text):
         self.txt = text
 
@@ -16,17 +20,17 @@ class BaseMethod(ABC):
     """Absatract base class for method class"""
     @abstractmethod
     def solve(self) -> None:
-        """"""
+        """Solve method."""
         pass
 
     @abstractmethod
     def start(self) -> list:
-        """"""
+        """Start method."""
         pass
 
     @abstractmethod
     def __str__(self) -> str:
-        """"""
+        """__str__."""
         return self.__class__.__name__
 
 
@@ -37,25 +41,24 @@ class MidSquareMethod(BaseMethod):
         self.result: list = []
 
     def solve(self) -> None:
-        """"""
-        rand_int = randint(10000000,99999999)
+        """Solve mid-square method."""
+        rand_int = randint(1000000000000000,9999999999999999)
 
         i = 0
         while i < self.n:
             rand_int = rand_int ** 2
-            if len(str(rand_int)) < 16:
-                rand_int = "0" * (16 - len(str(rand_int))) + str(rand_int)
+            if len(str(rand_int)) < 32:
+                rand_int = "0" * (32 - len(str(rand_int))) + str(rand_int)
             else:
                 rand_int = str(rand_int)
 
-            self.result.append(int(rand_int[3:11]) / 100000000)
-            rand_int = int(rand_int[3:11])
+            self.result.append(int(rand_int[7:23]) / 10000000000000000)
+            rand_int = int(rand_int[7:23])
 
             i += 1
 
-
     def start(self) -> list:
-        """"""
+        """Start solve method."""
         seed(randint(1,100))
 
         self.solve()
@@ -63,7 +66,7 @@ class MidSquareMethod(BaseMethod):
         return self.result
 
     def __str__(self) -> str:
-        """"""
+        """__str__."""
         super().__str__()
 
 
@@ -76,7 +79,7 @@ class MultiplicativeCongruentMethod(BaseMethod):
         self.result: list = []
 
     def solve(self) -> None:
-        """"""
+        """Solve multiplicative congruent method."""
         rand_int = randint(1000,9999)
 
         i = 0
@@ -87,9 +90,8 @@ class MultiplicativeCongruentMethod(BaseMethod):
 
             i += 1
 
-
     def start(self) -> list:
-        """"""
+        """Start solve method."""
         seed(randint(100,200))
 
         self.solve()
@@ -97,38 +99,63 @@ class MultiplicativeCongruentMethod(BaseMethod):
         return self.result
 
     def __str__(self) -> str:
-        """"""
+        """__str__."""
         super().__str__()
 
 
+class FuncMixin:
+    """Func mixin class with dispersion and checkmate waiting."""
+    def M(self, z: list) -> float:
+        """Сheckmate waiting M(x)."""
+        return 1/len(z) * sum(z)
+
+    def D(self, z: list) -> float:
+        """Dispersion D(x)."""
+        return 1/len(z) * sum(np.array(z) ** 2 - self.M(z) ** 2)
+
+
 class BaseTest(ABC):
-    """Absatract base class for test class"""
+    """Absatract base class for test class."""
     @abstractmethod
-    def solve(self, z: list, method) -> None:
-        """"""
+    def test(self, z: list, method) -> None:
+        """Test abstract method."""
         pass
 
     @abstractmethod
     def __str__(self) -> str:
-        """"""
+        """__str__."""
         return self.__class__.__name__
 
 
-class UniformityTest(BaseTest):
-    """Uniformity test class"""
+class UniformityTest(BaseTest, FuncMixin):
+    """Uniformity test class."""
     def __init__(self, k: int):
         self.k: int = k
         self.temp_dict: dict = {}
         self.array: list = []
 
+    def M(self, z: list) -> float:
+        """Сheckmate waiting M(x)."""
+        return super().M(z)
+
+    def D(self, z: list) -> float:
+        """Dispersion D(x)."""
+        return super().D(z)
+
     def build_plot(self, method) -> None:
-        """"""
-        plt.bar(self.array, list(self.temp_dict.values()), width=0.1, align='edge')
-        plt.title(method.__class__.__name__)
+        """Build plot of test result."""
+        nums = list(self.temp_dict.values())
+
+        plt.bar(self.array, nums, width=0.1, align='edge')
+        plt.title("\n".join([
+            method.__class__.__name__,
+            f"D = {self.D(method.result)}",
+            f"M = {self.M(method.result)}"
+            ]))
         plt.show()
 
-    def solve(self, z: list, method) -> None:
-        """"""
+    def test(self, z: list, method) -> None:
+        """Test method."""
         self.array = [i * 1/self.k for i in range(0,11)]
         for index, segment in enumerate(self.array):
             if index + 1 == len(self.array):
@@ -141,60 +168,65 @@ class UniformityTest(BaseTest):
         self.build_plot(method)
 
     def __str__(self) -> str:
-        """"""
+        """__str__."""
         super().__str__()
 
 
-class IndependenceTest(BaseTest):
-    """Independence test class"""
+class IndependenceTest(BaseTest, FuncMixin):
+    """Independence test class."""
     def __init__(self, k: int, s: int):
         self.k: int = k
         self.s: int = s
 
     def shift(self, z: list) -> list:
-        """"""
+        """Shift on s positions."""
         for i in range(self.s):
             z.insert(0, z.pop())
         return z
 
     def M(self, z: list) -> float:
-        """"""
-        return 1/len(z) * sum(z)
+        """Сheckmate waiting M(x)."""
+        return super().M(z)
 
     def D(self, z: list) -> float:
-        """"""
-        #return 1/len(z) * sum([i ** 2 - self.M(z) ** 2 for i in z])
-        return 1/len(z) * sum(map(lambda x: x ** 2, z)) - self.M(z) ** 2
+        """Dispersion D(x)."""
+        return super().D(z)
 
     def M_x_y(self, z: list, z_shift: list) -> float:
-        """"""
-        return sum([i * j for i, j in zip(z,z_shift)]) * 1/len(z)
+        """Сheckmate waiting M(xy)"""
+        return sum([i * j for i, j in zip(z, z_shift)]) * 1/len(z)
 
-    def corrcoef(self, z: list, z_shift: list) -> float:
-        """"""
-        return (self.M_x_y(z, z_shift) - self.M(z) * self.M(z_shift)) / sqrt(self.D(z) * self.D(z_shift))
+    def corrcoef(self, z: list, z_shift: list) -> None:
+        """Calculate and print corr coef."""
+        corr_coef = (self.M_x_y(z, z_shift) - self.M(z) * self.M(z_shift)) / sqrt(self.D(z) * self.D(z_shift))
+        print("Corr coef = {0}".format(corr_coef))
 
-    def solve(self, z: list, method) -> None:
-        """"""
+    def test(self, z: list, method) -> None:
+        """Test method."""
         z_shift = self.shift(z.copy())
-        print(self.corrcoef(z, z_shift))
+        self.corrcoef(z, z_shift)
 
     def __str__(self) -> str:
-        """"""
+        """__str__"""
         super().__str__()
 
 
 class LAB:
     """Construction and research of the characteristics  of sensors."""
-    def __init__(self, *method_objects: tuple) -> None:
+    def __init__(self) -> None:
+        self.methods: list = []
+        self.tests: list = []
+
+    def create_list_of_methods(self, *method_objects: tuple) -> None:
+        """Create list of methods."""
         self.methods: list = list(method_objects)
 
-    def add_tests(self, *test_objects: tuple) -> None:
-        """"""
+    def create_list_of_tests(self, *test_objects: tuple) -> None:
+        """Create list of tests."""
         self.tests: list = list(test_objects)
 
     def _checking_inheritance(self, list_object: list, base_class) -> None:
-        """"""
+        """Check inheritance."""
         try:
             for index, obj in enumerate(list_object):
                 if not isinstance(obj, base_class):
@@ -210,45 +242,45 @@ class LAB:
 
     @property
     def methods(self) -> list:
-        """"""
+        """Get methods."""
         return self._methods
     
     @methods.setter
     def methods(self, *methods) -> None:
-        """"""
+        """Set metods."""
         methods = methods[0]
         self._checking_inheritance(methods, BaseMethod)
 
     @property
     def tests(self) -> list:
-        """"""
+        """Get tests."""
         return self._tests
     
     @tests.setter
     def tests(self, *tests) -> None:
-        """"""
+        """Set tests."""
         tests = tests[0]
         self._checking_inheritance(tests, BaseTest)
 
     def run(self) -> None:
-        """Function for run all methods"""
+        """Function for run and test all methods"""
         for method in self.methods:
             z = method.start()
-            print(z)
             for test in self.tests:
-                test.solve(z, method)
+                test.test(z, method)
 
 
 def main() -> None:
     """Main"""
-    midsquare_method = MidSquareMethod(10)
-    multiplicative_congruent_method = MultiplicativeCongruentMethod(10, 16807, 2 ** 31 - 1)
+    midsquare = MidSquareMethod(1000000)
+    multiplicative_congruent = MultiplicativeCongruentMethod(1000000, 16807, 2 ** 31 - 1)
 
-    independence_test = IndependenceTest(10, 5)
-    uniformity_test= UniformityTest(10)
+    independence = IndependenceTest(10, 5)
+    uniformity = UniformityTest(10)
 
-    lab = LAB(midsquare_method, multiplicative_congruent_method)
-    lab.add_tests(independence_test, uniformity_test)
+    lab = LAB()
+    lab.create_list_of_methods(midsquare, multiplicative_congruent)
+    lab.create_list_of_tests(independence, uniformity)
     lab.run()
 
 
